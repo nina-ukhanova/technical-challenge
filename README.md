@@ -65,11 +65,14 @@ curl http://localhost:8080/api/payments
 ## 3. Added @Transactional to processPayment()
 - Ensures atomic operations - rollback if external system fails
 - Test: `PaymentServiceTransactionTest.testProcessPaymentTransactionRollback_WhenExternalSystemFails()`
-- Prevents orphaned PENDING payments when external system fails*
+- Prevents orphaned PENDING payments when external system fails
 
-## 4. Changed Amount from float to BigDecimal
-- Fixes precision errors with financial calculations
+## 4. Changed Amount from int/float to BigDecimal 
+- Changed `amount` field from `float` to `BigDecimal` in `Payment` entity and  related DTO with scale of 4.
 - BigDecimal ensures exact decimal arithmetic (0.1 + 0.2 = 0.3, not 0.30000001)
+- Breaking change - clients must update JSON parsing to handle BigDecimal serialization.
+However, the issue is also that controller returns directly the entity (can expose internal entity structure to clients + schema changes can break API contracts)
+To fix that it is required to create a separate DTO as response.
 
 ## 5. Removed Unnecessary Response Object
 - Simplified ExternalSystemMock - removed unused object creation in sendPayment() method
@@ -154,11 +157,30 @@ public class PaymentEventListener {
 ```
 Improves scalability by not blocking DB connections during slow external calls.
 
-## 4. Replace H2 with Production Database
-- H2 in-memory database loses all data on restart, has limited concurrent connection handling, and no persistence.
+## 4. Move Repository Calls to Service Layer and Fix Count Performance
+- Controller directly calls `repository.findAll().size()` which loads all Payment records into memory just to count them, can be an issue with, for example, 1M of records.
+- Suggestion: To extract a method to service layer which provides proper separation of concerns and transaction management
+```java
+// Service layer
+@Transactional(readOnly = true)
+public long countPayments() {
+    return repository.count();
+}
+
+// Controller
+@GetMapping("/count")
+public ResponseEntity<Long> countPayments() {
+    return ResponseEntity.ok(paymentService.countPayments());
+}
+```
+Breaking change - the integration must be updated on the client side. 
+
+
+## 5. Replace H2 with Production Database
+- H2 in-memory database loses all data on restart, no persistence.
 - Suggestion: Use production-grade database: PostgreSQL/MySQL/Oracle
 
-## 5. Client-Provided Idempotency Keys
+## 6. Client-Provided Idempotency Keys
 - Server-generated idempotency keys based on payment data can't distinguish between legitimate duplicate payments and retries.
 - Suggestion: Accept idempotency key from client in request header or body:
 ```java
@@ -170,11 +192,11 @@ public ResponseEntity<Payment> processPayment(
 ```
 Gives clients full control over retry logic. Same key = return cached result, different key = new payment. Prevents accidental duplicate payments.
 
-## 6. Database Indexes
+## 7. Database Indexes
 - No explicit indexes defined - queries on `idempotencyKey` will perform full table scans causing performance degradation when the data is increasing.
 - Suggestion: Add indexes on frequently queried columns
-- 
-## 7. Retry Logic for external call + probably add Circuit Breaker
+
+## 8. Retry Logic for external call + probably add Circuit Breaker
 - No retry mechanism for failures (temporary service unavailability).
 - Suggestion: Add configurable retry
 
