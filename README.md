@@ -52,7 +52,7 @@ curl http://localhost:8080/api/payments
 
 # My changes
 
-Link to github - https://github.com/nina-ukhanova/technical-challenge 
+Link to github - https://github.com/nina-ukhanova/technical-challenge (https://github.com/nina-ukhanova/technical-challenge.git)
 
 ## 1. Fixed Business Rule Validation
 - Added amount validation: must be > 0 and ≤ 199,999,999
