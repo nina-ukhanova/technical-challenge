@@ -10,22 +10,21 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "payments") //TODO the name of the table can be discussed to use single
+@Table(name = "payments")
 public class Payment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
 
     private String cardHolder;
 
     @Column(precision = 13, scale = 4)
     private BigDecimal amount;
-    private String currency; // TODO use enum
+    private String currency;
     private String maskedCard;
 
     @Column(unique = true)

@@ -15,7 +15,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -107,7 +106,7 @@ class PaymentServiceIntegrationTest {
         CountDownLatch endLatch = new CountDownLatch(numberOfThreads);
         try (ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads)) {
 
-            Set<UUID> generatedIds = ConcurrentHashMap.newKeySet();
+            Set<Long> generatedIds = ConcurrentHashMap.newKeySet();
             List<Exception> exceptions = new CopyOnWriteArrayList<>();
 
             for (int i = 0; i < numberOfThreads; i++) {

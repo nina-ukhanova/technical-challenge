@@ -1,10 +1,12 @@
 package com.lp.payment.service;
 
+import com.lp.payment.common.exception.PaymentProcessingException;
 import com.lp.payment.dto.PaymentRequest;
 import com.lp.payment.entity.Payment;
 import com.lp.payment.external.ExternalSystemMock;
 import com.lp.payment.repository.PaymentRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -17,6 +19,7 @@ import java.util.Base64;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class PaymentService {
 
     private final PaymentRepository repository;
@@ -33,30 +36,58 @@ public class PaymentService {
     @Transactional
     public Payment processPayment(PaymentRequest request) {
 
+        final String maskedCard = request.getCardNumber().substring(request.getCardNumber().length() - 4);
+        log.info("Processing payment request - Amount: {}, Currency: {}, MaskedCard: ****{}",
+                request.getAmount(), request.getCurrency(), maskedCard);
+
         final BigDecimal requestAmount = request.getAmount();
         if (requestAmount.compareTo(BigDecimal.ZERO) <= 0 || requestAmount.compareTo(BigDecimal.valueOf(199999999)) > 0) {
+            log.error("Invalid payment amount: {} - must be greater than 0 and less or equal to 199999999", requestAmount);
             throw new IllegalArgumentException("Amount in the request must be greater 0 and less or equal 199999999");
         }
 
         var idempotencyKey = generateIdempotencyKey(request.getCardHolder(), request.getAmount(), request.getCurrency(), request.getCardNumber());
+        log.debug("Generated idempotency key: {}", idempotencyKey);
 
         Optional<Payment> existing = repository.findByIdempotencyKey(idempotencyKey);
         if (existing.isPresent()) {
-            return existing.get();
+            Payment existingPayment = existing.get();
+            log.info("Payment already exists (idempotency key matched) - PaymentId: {}, Status: {}, Amount: {}, Currency: {}",
+                    existingPayment.getId(), existingPayment.getStatus(), 
+                    existingPayment.getAmount(), existingPayment.getCurrency());
+            return existingPayment;
         }
+
+        log.debug("No existing payment found, creating new payment record");
 
         Payment payment = new Payment();
         payment.setCardHolder(request.getCardHolder());
         payment.setAmount(request.getAmount());
         payment.setCurrency(request.getCurrency());
-        payment.setMaskedCard(request.getCardNumber().substring(request.getCardNumber().length() - 4));
+        payment.setMaskedCard(maskedCard);
         payment.setIdempotencyKey(idempotencyKey);
 
         repository.save(payment);
+        log.debug("Payment saved to database - PaymentId: {}, Status: {}", payment.getId(), payment.getStatus());
 
-        var response = externalSystem.sendPayment(payment); // TODO handle errors - blocking request
+        log.info("Sending payment to external system - PaymentId: {}, Amount: {}, Currency: {}, MaskedCard: ****{}",
+                payment.getId(), payment.getAmount(), payment.getCurrency(), payment.getMaskedCard());
+
+        Payment response;
+        try {
+            response = externalSystem.sendPayment(payment);
+            log.info("External system response received - PaymentId: {}, Status: {}", response.getId(), response.getStatus());
+
+        } catch (Exception exception) {
+            throw new PaymentProcessingException(
+                    "Failed to process payment with external system: " + exception.getMessage(),
+                    payment.getId().toString(),
+                    exception);
+        }
 
         repository.save(response);
+        log.info("Payment processing completed successfully - PaymentId: {}, FinalStatus: {}, Amount: {}, Currency: {}",
+                response.getId(), response.getStatus(), response.getAmount(), response.getCurrency());
         return response;
     }
 
@@ -64,6 +95,8 @@ public class PaymentService {
                                          BigDecimal amount,
                                          String currency,
                                          String cardNumber) {
+
+        log.debug("Generating idempotency key - Amount: {}, Currency: {}", amount, currency);
 
         String timePart = LocalDateTime.now().format(formatter);
 
