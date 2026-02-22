@@ -4,19 +4,18 @@ import com.lp.payment.dto.PaymentRequest;
 import com.lp.payment.entity.Payment;
 import com.lp.payment.repository.PaymentRepository;
 import com.lp.payment.service.PaymentService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/payments")
+@RequiredArgsConstructor
 public class PaymentController {
 
-    @Autowired
-    private PaymentService paymentService;
+    private final PaymentService paymentService;
 
-    @Autowired
-    private PaymentRepository repository;
+    private final PaymentRepository repository;
 
     @PostMapping
     public ResponseEntity<Payment> processPayment(@RequestBody PaymentRequest request) throws InterruptedException {

@@ -4,7 +4,6 @@ import com.lp.payment.dto.PaymentRequest;
 import com.lp.payment.entity.Payment;
 import com.lp.payment.external.ExternalSystemMock;
 import com.lp.payment.repository.PaymentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -17,21 +16,27 @@ import java.util.Optional;
 
 @Service
 public class PaymentService {
+
+    private final PaymentRepository repository;
+    private final ExternalSystemMock externalSystem;
+
     private final SimpleDateFormat sdf;
     private final MessageDigest digest;
 
-    @Autowired
-    private PaymentRepository repository;
-
-    @Autowired
-    private ExternalSystemMock externalSystem;
-
-    public PaymentService() throws NoSuchAlgorithmException {
+    public PaymentService(PaymentRepository paymentRepository, ExternalSystemMock externalSystemMock) throws NoSuchAlgorithmException {
         sdf = new SimpleDateFormat("yyyyMMddHHmm");
         digest = MessageDigest.getInstance("SHA-256");
+
+        repository = paymentRepository;
+        externalSystem = externalSystemMock;
     }
 
     public Payment processPayment(PaymentRequest request) {
+
+        final int requestAmount = request.getAmount();
+        if (requestAmount <= 0 || requestAmount > 199999999) {
+            throw new IllegalArgumentException("Amount in the request must be greater 0 and less or equal 199999999");
+        }
 
         var idempotencyKey = generateIdempotencyKey(request.getCardHolder(), request.getAmount(), request.getCurrency(), request.getCardNumber());
 
