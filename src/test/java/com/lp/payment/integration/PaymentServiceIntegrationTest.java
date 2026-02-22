@@ -66,7 +66,7 @@ class PaymentServiceIntegrationTest {
             fail("Expected RuntimeException to be thrown");
         } catch (RuntimeException e) {
             // Expected exception
-            assertEquals("Fails to execute request", e.getMessage());
+            assertEquals("Failed to process payment with external system: Fails to execute request", e.getMessage());
         }
 
         long countAfterProcessing = paymentRepository.count();
