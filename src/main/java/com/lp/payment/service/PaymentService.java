@@ -7,6 +7,7 @@ import com.lp.payment.repository.PaymentRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -32,8 +33,8 @@ public class PaymentService {
     @Transactional
     public Payment processPayment(PaymentRequest request) {
 
-        final int requestAmount = request.getAmount();
-        if (requestAmount <= 0 || requestAmount > 199999999) {
+        final BigDecimal requestAmount = request.getAmount();
+        if (requestAmount.compareTo(BigDecimal.ZERO) <= 0 || requestAmount.compareTo(BigDecimal.valueOf(199999999)) > 0) {
             throw new IllegalArgumentException("Amount in the request must be greater 0 and less or equal 199999999");
         }
 
@@ -60,7 +61,7 @@ public class PaymentService {
     }
 
     public String generateIdempotencyKey(String cardHolderName,
-                                         float amount,
+                                         BigDecimal amount,
                                          String currency,
                                          String cardNumber) {
 

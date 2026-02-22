@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -21,7 +22,9 @@ public class Payment {
     private UUID id;
 
     private String cardHolder;
-    private float amount;
+
+    @Column(precision = 13, scale = 4)
+    private BigDecimal amount;
     private String currency; // TODO use enum
     private String maskedCard;
 

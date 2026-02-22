@@ -12,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.security.NoSuchAlgorithmException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -41,7 +40,7 @@ class PaymentServiceTest {
         // Case 1. - negative amount
         final PaymentRequest requestInvalidAmount = new PaymentRequest();
         requestInvalidAmount.setCardHolder("Test User");
-        requestInvalidAmount.setAmount(-500); // TODO to make a constant
+        requestInvalidAmount.setAmount(BigDecimal.valueOf(-500)); // TODO to make a constant
         requestInvalidAmount.setCurrency("EUR"); // TODO to use enum
         requestInvalidAmount.setCardNumber("1234567890123456");
 
@@ -53,7 +52,7 @@ class PaymentServiceTest {
         verify(externalSystemMock, never()).sendPayment(any(Payment.class));
 
         // Case 2. - amount more then 199999999
-        requestInvalidAmount.setAmount(200000000); // TODO to make a constant
+        requestInvalidAmount.setAmount(BigDecimal.valueOf(200000000)); // TODO to make a constant
         Assertions.assertThrows(IllegalArgumentException.class,
                 () -> paymentService.processPayment(requestInvalidAmount));
 
@@ -62,7 +61,7 @@ class PaymentServiceTest {
         verify(paymentRepository, never()).save(any(Payment.class));
 
         // Case 3. - amount is 0
-        requestInvalidAmount.setAmount(BigDecimal.ZERO.intValue());
+        requestInvalidAmount.setAmount(BigDecimal.ZERO);
         Assertions.assertThrows(IllegalArgumentException.class,
                 () -> paymentService.processPayment(requestInvalidAmount));
 

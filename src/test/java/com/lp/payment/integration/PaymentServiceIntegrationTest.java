@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -52,7 +53,7 @@ class PaymentServiceIntegrationTest {
 
         PaymentRequest request = new PaymentRequest();
         request.setCardHolder("Test User");
-        request.setAmount(100);
+        request.setAmount(BigDecimal.valueOf(100));
         request.setCurrency("USD");
         request.setCardNumber("1234567890123456");
 
@@ -79,7 +80,7 @@ class PaymentServiceIntegrationTest {
         // Arrange
         PaymentRequest request = new PaymentRequest();
         request.setCardHolder("Test User");
-        request.setAmount(200);
+        request.setAmount(BigDecimal.valueOf(200));
         request.setCurrency("EUR");
         request.setCardNumber("9876543210987654");
 
@@ -118,7 +119,7 @@ class PaymentServiceIntegrationTest {
                         for (int j = 0; j < paymentsPerThread; j++) {
                             PaymentRequest request = new PaymentRequest();
                             request.setCardHolder("User-" + threadId + "-" + j);
-                            request.setAmount(100 + j);
+                            request.setAmount(BigDecimal.valueOf(100 + j));
                             request.setCurrency("USD");
                             request.setCardNumber("1234567890123456");
 
