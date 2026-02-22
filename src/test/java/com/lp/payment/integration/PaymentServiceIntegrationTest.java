@@ -98,7 +98,7 @@ class PaymentServiceIntegrationTest {
     }
 
     @Test
-    void testUUID_NoCollisionsWithConcurrentCreation() throws InterruptedException {
+    void testID_NoCollisionsWithConcurrentCreation() throws InterruptedException {
 
         int numberOfThreads = 10;
         int paymentsPerThread = 10;

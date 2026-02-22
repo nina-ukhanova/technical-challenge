@@ -40,8 +40,8 @@ class PaymentServiceTest {
         // Case 1. - negative amount
         final PaymentRequest requestInvalidAmount = new PaymentRequest();
         requestInvalidAmount.setCardHolder("Test User");
-        requestInvalidAmount.setAmount(BigDecimal.valueOf(-500)); // TODO to make a constant
-        requestInvalidAmount.setCurrency("EUR"); // TODO to use enum
+        requestInvalidAmount.setAmount(BigDecimal.valueOf(-500));
+        requestInvalidAmount.setCurrency("EUR");
         requestInvalidAmount.setCardNumber("1234567890123456");
 
         Assertions.assertThrows(IllegalArgumentException.class,
@@ -52,7 +52,7 @@ class PaymentServiceTest {
         verify(externalSystemMock, never()).sendPayment(any(Payment.class));
 
         // Case 2. - amount more then 199999999
-        requestInvalidAmount.setAmount(BigDecimal.valueOf(200000000)); // TODO to make a constant
+        requestInvalidAmount.setAmount(BigDecimal.valueOf(200000000));
         Assertions.assertThrows(IllegalArgumentException.class,
                 () -> paymentService.processPayment(requestInvalidAmount));
 
