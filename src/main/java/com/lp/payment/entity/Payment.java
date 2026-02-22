@@ -25,7 +25,7 @@ public class Payment {
     private String currency; // TODO use enum
     private String maskedCard;
 
-    @Column(/*unique = true*/)
+    @Column(unique = true)
     private String idempotencyKey;
 
     private Instant createdAt = Instant.now();

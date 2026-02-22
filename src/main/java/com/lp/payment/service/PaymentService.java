@@ -20,17 +20,10 @@ public class PaymentService {
 
     private final PaymentRepository repository;
     private final ExternalSystemMock externalSystem;
-
     private final DateTimeFormatter formatter;
-    private final MessageDigest digest;
 
     public PaymentService(PaymentRepository paymentRepository, ExternalSystemMock externalSystemMock) {
         formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssnnnnnnnnn");
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 algorithm not available", e);
-        }
 
         repository = paymentRepository;
         externalSystem = externalSystemMock;
@@ -79,6 +72,12 @@ public class PaymentService {
     }
 
     private String sha256Base64(String data) {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
         byte[] hash = digest.digest(data.getBytes(StandardCharsets.UTF_8));
         return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
     }
