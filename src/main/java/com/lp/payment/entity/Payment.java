@@ -1,10 +1,15 @@
 package com.lp.payment.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Data;
 
 import java.time.Instant;
-import java.util.Date;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -12,15 +17,15 @@ import java.util.Date;
 public class Payment {
 
     @Id
-    private Long id = new Date().getTime();
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    //TODO it is better to update the name of the columns in DB to use snake case
     private String cardHolder;
     private float amount;
     private String currency; // TODO use enum
     private String maskedCard;
 
-    @Column // TODO why this annotation is used without defining a name?
+    @Column(/*unique = true*/)
     private String idempotencyKey;
 
     private Instant createdAt = Instant.now();

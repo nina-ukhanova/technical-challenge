@@ -4,14 +4,15 @@ import com.lp.payment.dto.PaymentRequest;
 import com.lp.payment.entity.Payment;
 import com.lp.payment.external.ExternalSystemMock;
 import com.lp.payment.repository.PaymentRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
-import java.util.Date;
 import java.util.Optional;
 
 @Service
@@ -20,17 +21,22 @@ public class PaymentService {
     private final PaymentRepository repository;
     private final ExternalSystemMock externalSystem;
 
-    private final SimpleDateFormat sdf;
+    private final DateTimeFormatter formatter;
     private final MessageDigest digest;
 
-    public PaymentService(PaymentRepository paymentRepository, ExternalSystemMock externalSystemMock) throws NoSuchAlgorithmException {
-        sdf = new SimpleDateFormat("yyyyMMddHHmm");
-        digest = MessageDigest.getInstance("SHA-256");
+    public PaymentService(PaymentRepository paymentRepository, ExternalSystemMock externalSystemMock) {
+        formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssnnnnnnnnn");
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
 
         repository = paymentRepository;
         externalSystem = externalSystemMock;
     }
 
+    @Transactional
     public Payment processPayment(PaymentRequest request) {
 
         final int requestAmount = request.getAmount();
@@ -54,7 +60,7 @@ public class PaymentService {
 
         repository.save(payment);
 
-        var response = externalSystem.sendPayment(payment);
+        var response = externalSystem.sendPayment(payment); // TODO handle errors - blocking request
 
         repository.save(response);
         return response;
@@ -65,7 +71,7 @@ public class PaymentService {
                                          String currency,
                                          String cardNumber) {
 
-        String timePart = sdf.format(new Date());
+        String timePart = LocalDateTime.now().format(formatter);
 
         String data = cardHolderName + "|" + amount + "|" + currency + "|" + cardNumber + "|" + timePart;
 

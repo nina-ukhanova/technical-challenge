@@ -31,7 +31,7 @@ class PaymentServiceTest {
     private PaymentService paymentService;
 
     @BeforeEach
-    void init() throws NoSuchAlgorithmException {
+    void init() {
         paymentService = new PaymentService(paymentRepository, externalSystemMock);
     }
 
@@ -40,7 +40,7 @@ class PaymentServiceTest {
 
         // Case 1. - negative amount
         final PaymentRequest requestInvalidAmount = new PaymentRequest();
-        requestInvalidAmount.setCardHolder("John Doe");
+        requestInvalidAmount.setCardHolder("Test User");
         requestInvalidAmount.setAmount(-500); // TODO to make a constant
         requestInvalidAmount.setCurrency("EUR"); // TODO to use enum
         requestInvalidAmount.setCardNumber("1234567890123456");

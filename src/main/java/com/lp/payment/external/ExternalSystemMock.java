@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ExternalSystemMock {
+
     public Payment sendPayment(Payment payment) {
         var response = new Payment();
         response.setId(payment.getId());
