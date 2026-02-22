@@ -74,7 +74,9 @@ Link to github - https://github.com/nina-ukhanova/technical-challenge (https://g
 - BigDecimal ensures exact decimal arithmetic (0.1 + 0.2 = 0.3, not 0.30000001)
 - Breaking change - clients must update JSON parsing to handle BigDecimal serialization.
 However, the issue is also that controller returns directly the entity (can expose internal entity structure to clients + schema changes can break API contracts)
-To fix that it is required to create a separate DTO as response.
+To fix that it is required to create a separate DTO as response. 
+Also scale should not be hardcoded (e.g., 4), because the number of fraction digits depends on the currency. 
+The amount should be validated against the currency’s allowed fraction digits and optionally normalized to that scale.
 
 ## 5. Removed Unnecessary Response Object
 - Simplified ExternalSystemMock - removed unused object creation in sendPayment() method
@@ -98,8 +100,8 @@ To fix that it is required to create a separate DTO as response.
 # My suggested improvements
 ## 1. Use Enumerations for Status and Currency
 - Status and currency are stored as strings, allowing invalid values.
-- Suggestion: Create enums `PaymentStatus` and `Currency`, store as `@Enumerated(EnumType.STRING)` or `EnumType.ORDINAL`.
-That will prevent invalid data entry, improves type safety and ordinal storage can improve query performance and reduce storage space.
+- Suggestion: Create enums `PaymentStatus` and `Currency`, store as `@Enumerated(EnumType.STRING)`.
+That will prevent invalid data entry, improves type safety.
 
 ## 2. Add Request Payload Validation
 - `PaymentRequest` lacks validation.
@@ -201,6 +203,13 @@ Gives clients full control over retry logic. Same key = return cached result, di
 ## 8. Retry Logic for external call + probably add Circuit Breaker
 - No retry mechanism for failures (temporary service unavailability).
 - Suggestion: Add configurable retry
+
+## 9. Explicit Error Contract
+
+- Introduce a well-defined and consistent error response model across the API.
+HTTP Status Codes:
+400 Bad Request – for validation errors
+409 Conflict – for idempotency conflicts or duplicate key violations. etc
 
 # Questions on Business/Technical Requirements
 
